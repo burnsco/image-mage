@@ -277,7 +277,7 @@ export default function Home() {
       {/* Background Gradients */}
       <div className="pointer-events-none absolute -top-32 left-1/2 h-130 w-130 -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_center,var(--glow),transparent_70%)] opacity-50 blur-3xl" />
 
-      <div className="relative flex min-h-screen flex-col justify-center px-4 pt-4 pb-4">
+      <div className="relative flex min-h-screen flex-col justify-center p-4">
         {/* Header */}
         <header className="mb-4 flex shrink-0 items-center justify-between">
           <div className="flex items-center gap-2">
@@ -393,7 +393,7 @@ export default function Home() {
                 </button>
               </div>
 
-              <div className="max-h-75 flex-1 overflow-y-auto px-2 py-2 lg:max-h-none">
+              <div className="max-h-75 flex-1 overflow-y-auto p-2 lg:max-h-none">
                 {files.length === 0 ? (
                   <div className="flex h-full flex-col items-center justify-center p-4 text-center">
                     <p className="text-[10px] text-(--muted)">No images</p>
