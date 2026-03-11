@@ -93,11 +93,11 @@ export default function Home() {
 
   const totalInputSize = useMemo(
     () => files.reduce((sum, item) => sum + item.file.size, 0),
-    [files]
+    [files],
   );
   const totalEstimatedSize = useMemo(
     () => estimate.reduce((sum, item) => sum + item.outputSize, 0),
-    [estimate]
+    [estimate],
   );
   const estimatedPercent = useMemo(() => {
     if (!estimate.length) return 0;
@@ -332,9 +332,7 @@ export default function Home() {
               IM
             </div>
             <div>
-              <h1 className="font-display text-base/tight font-bold tracking-tight">
-                Image Mage
-              </h1>
+              <h1 className="font-display text-base/tight font-bold tracking-tight">Image Mage</h1>
               <p className="text-[10px]/tight font-medium tracking-wider text-(--muted) uppercase">
                 Optimizer
               </p>
@@ -347,9 +345,7 @@ export default function Home() {
                 <div className="text-[9px] font-bold tracking-tighter text-(--muted) uppercase">
                   Files
                 </div>
-                <div className="text-[11px] leading-none font-semibold">
-                  {files.length}
-                </div>
+                <div className="text-[11px] leading-none font-semibold">{files.length}</div>
               </div>
               <div className="text-right">
                 <div className="text-[9px] font-bold tracking-tighter text-(--muted) uppercase">
@@ -531,27 +527,23 @@ export default function Home() {
                     <span className="text-[10px] font-bold tracking-wider text-(--muted) uppercase">
                       Preset
                     </span>
-                    <span className="text-[9px] font-bold text-(--sea) uppercase">
-                      {preset}
-                    </span>
+                    <span className="text-[9px] font-bold text-(--sea) uppercase">{preset}</span>
                   </div>
                   <div className="grid grid-cols-5 gap-1.5">
-                    {(["tiny", "small", "balanced", "crisp", "custom"] as Preset[]).map(
-                      (p) => (
-                        <button
-                          type="button"
-                          key={p}
-                          onClick={() => handlePresetChange(p)}
-                          className={`rounded-lg py-1.5 text-[9px] font-bold tracking-tighter uppercase transition ${
-                            preset === p
-                              ? "bg-(--sea) text-white shadow-md"
-                              : "bg-white/5 text-(--muted) hover:bg-white/10"
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      )
-                    )}
+                    {(["tiny", "small", "balanced", "crisp", "custom"] as Preset[]).map((p) => (
+                      <button
+                        type="button"
+                        key={p}
+                        onClick={() => handlePresetChange(p)}
+                        className={`rounded-lg py-1.5 text-[9px] font-bold tracking-tighter uppercase transition ${
+                          preset === p
+                            ? "bg-(--sea) text-white shadow-md"
+                            : "bg-white/5 text-(--muted) hover:bg-white/10"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -621,9 +613,7 @@ export default function Home() {
                   />
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="font-bold tracking-wider text-(--muted) uppercase">
-                    Savings
-                  </span>
+                  <span className="font-bold tracking-wider text-(--muted) uppercase">Savings</span>
                   <span className="font-bold text-(--sea)">
                     {estimate.length ? formatPercent(estimatedSavings) : "0%"}
                   </span>
@@ -721,9 +711,7 @@ export default function Home() {
                   <select
                     id="fit-strategy"
                     value={fit}
-                    onChange={(e) =>
-                      setFit(e.target.value as "inside" | "cover" | "contain")
-                    }
+                    onChange={(e) => setFit(e.target.value as "inside" | "cover" | "contain")}
                     className="w-full rounded-lg border border-white/5 bg-white/5 px-3 py-2 text-xs font-bold transition outline-none focus:border-(--sea)/50"
                   >
                     <option value="inside">Maintain Ratio</option>
@@ -791,10 +779,7 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/5 px-3 py-2">
-                  <label
-                    htmlFor="bg-color"
-                    className="text-[10px] font-bold text-(--muted)"
-                  >
+                  <label htmlFor="bg-color" className="text-[10px] font-bold text-(--muted)">
                     BG Fill
                   </label>
                   <input
@@ -813,9 +798,7 @@ export default function Home() {
                     <span className="text-[9px] font-bold tracking-widest text-(--sea) uppercase">
                       Success
                     </span>
-                    <span className="text-[10px] font-bold">
-                      {formatBytes(result.size)}
-                    </span>
+                    <span className="text-[10px] font-bold">{formatBytes(result.size)}</span>
                   </div>
                   <button
                     type="button"

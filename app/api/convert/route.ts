@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : "Failed to process images.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

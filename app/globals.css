@@ -30,11 +30,7 @@ body {
   background-color: var(--bg);
   background-image:
     radial-gradient(1200px 600px at 80% -10%, var(--glow) 0%, transparent 60%),
-    radial-gradient(
-      900px 500px at 10% -20%,
-      rgba(251, 191, 36, 0.05) 0%,
-      transparent 55%
-    ),
+    radial-gradient(900px 500px at 10% -20%, rgba(251, 191, 36, 0.05) 0%, transparent 55%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
   color: var(--ink);
   font-family: var(--font-body), system-ui, sans-serif;

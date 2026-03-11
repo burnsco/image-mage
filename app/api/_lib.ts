@@ -1,14 +1,6 @@
 import sharp from "sharp";
 
-export type OutputFormat =
-  | "auto"
-  | "jpeg"
-  | "jpg"
-  | "png"
-  | "webp"
-  | "avif"
-  | "tiff"
-  | "gif";
+export type OutputFormat = "auto" | "jpeg" | "jpg" | "png" | "webp" | "avif" | "tiff" | "gif";
 
 export type NormalizedFormat = Exclude<OutputFormat, "auto" | "jpg">;
 
@@ -40,10 +32,7 @@ export function getExtension(name: string) {
   return parts.length > 1 ? (parts.pop() ?? "").toLowerCase() : "";
 }
 
-export function normalizeFormat(
-  format: OutputFormat,
-  fallback?: string
-): NormalizedFormat {
+export function normalizeFormat(format: OutputFormat, fallback?: string): NormalizedFormat {
   const fb = fallback ?? "";
   if (format === "auto") {
     if (fb === "jpg" || fb === "jpeg") return "jpeg";
@@ -155,7 +144,7 @@ export function encodeWithQuality(
   buffer: Buffer,
   format: NormalizedFormat,
   quality: number,
-  options: EncoderOptions
+  options: EncoderOptions,
 ) {
   const pipeline = buildPipeline(buffer, options);
   switch (format) {
@@ -181,7 +170,7 @@ export async function encodeToTargetSize(
   format: NormalizedFormat,
   targetBytes: number,
   baseQuality: number,
-  options: EncoderOptions
+  options: EncoderOptions,
 ) {
   let low = 30;
   let high = Math.max(baseQuality, 40);
@@ -203,15 +192,12 @@ export async function encodeToTargetSize(
     }
   }
 
-  return (
-    bestBuffer ??
-    (await encodeWithQuality(buffer, format, baseQuality, options).toBuffer())
-  );
+  return bestBuffer ?? (await encodeWithQuality(buffer, format, baseQuality, options).toBuffer());
 }
 
 export async function processFiles(
   files: File[],
-  options: ConversionOptions
+  options: ConversionOptions,
 ): Promise<ProcessedFile[]> {
   return Promise.all(
     files.map(async (file) => {
@@ -237,13 +223,13 @@ export async function processFiles(
               outputFormat,
               options.targetSizeKB * 1024,
               options.quality,
-              encoderOptions
+              encoderOptions,
             )
           : await encodeWithQuality(
               buffer,
               outputFormat,
               options.quality,
-              encoderOptions
+              encoderOptions,
             ).toBuffer();
 
       const extension = outputFormat === "jpeg" ? "jpg" : outputFormat;
@@ -256,6 +242,6 @@ export async function processFiles(
         outputFormat,
         encoded,
       };
-    })
+    }),
   );
 }
