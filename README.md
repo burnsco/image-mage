@@ -1,6 +1,6 @@
 # Image Mage — The Ultimate Web Image Toolkit
 
-**Image Mage** is a powerful, privacy-focused web application for batch image conversion and compression. Built with **Next.js 15**, it provides a seamless experience for optimizing your visual assets with professional-grade controls—all directly in your browser.
+**Image Mage** is a powerful, privacy-focused web application for batch image conversion and compression. Built with **Vite + React**, it provides a seamless experience for optimizing your visual assets with professional-grade controls—all directly in your browser.
 
 ## ✨ Features
 
@@ -14,11 +14,11 @@
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Frontend**: Vite + React 19
 - **UI & Logic**: React 19, TypeScript
 - **Styling**: Tailwind CSS 4
-- **Engine**: Sharp (Edge-compatible)
-- **Deployment**: Cloudflare Workers via OpenNext
+- **API Server**: Express + Multer
+- **Engine**: Sharp
 
 ## 🚀 Getting Started
 
@@ -30,11 +30,11 @@ bun install
 bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to start optimizing.
+Open [http://localhost:5173](http://localhost:5173) to start optimizing.
 
 ## 📦 Scripts
 
 - `bun run dev`: Start development server.
 - `bun run build`: Build for production.
-- `bun run deploy`: Deploy to Cloudflare.
+- `bun run start`: Run the image API server.
 - `bun run lint`: Run linting checks.
