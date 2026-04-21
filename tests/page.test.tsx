@@ -1,17 +1,24 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { convertClientFiles, estimateClientFiles } from "@/lib/browser-image-processing";
 import Home from "@/app/page";
+
+vi.mock("@/lib/browser-image-processing", () => ({
+  convertClientFiles: vi.fn(),
+  estimateClientFiles: vi.fn(),
+}));
 
 // Mock URL.createObjectURL and revokeObjectURL
 const mockCreateObjectURL = vi.fn();
 const mockRevokeObjectURL = vi.fn();
+const mockAnchorClick = vi.fn();
 
 global.URL.createObjectURL = mockCreateObjectURL;
 global.URL.revokeObjectURL = mockRevokeObjectURL;
+HTMLAnchorElement.prototype.click = mockAnchorClick;
 
-// Mock fetch
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+const mockEstimateClientFiles = vi.mocked(estimateClientFiles);
+const mockConvertClientFiles = vi.mocked(convertClientFiles);
 
 // Mock crypto.randomUUID if not available
 if (!global.crypto) {
@@ -28,7 +35,9 @@ if (!global.crypto) {
 describe("Home Page", () => {
   beforeEach(() => {
     mockCreateObjectURL.mockReturnValue("mock-url");
-    mockFetch.mockReset();
+    mockAnchorClick.mockReset();
+    mockEstimateClientFiles.mockReset();
+    mockConvertClientFiles.mockReset();
   });
 
   afterEach(() => {
@@ -97,19 +106,14 @@ describe("Home Page", () => {
   });
 
   it("handles estimation successfully", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        files: [
-          {
-            name: "test.png",
-            inputName: "test.png",
-            inputSize: 1000,
-            outputSize: 500,
-          },
-        ],
-      }),
-    });
+    mockEstimateClientFiles.mockResolvedValueOnce([
+      {
+        name: "test.png",
+        inputName: "test.png",
+        inputSize: 1000,
+        outputSize: 500,
+      },
+    ]);
 
     const { container } = render(<Home />);
     const file = new File(["test"], "test.png", { type: "image/png" });
@@ -120,12 +124,7 @@ describe("Home Page", () => {
     fireEvent.click(estimateBtn);
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith(
-        "/api/estimate",
-        expect.objectContaining({
-          method: "POST",
-        }),
-      );
+      expect(mockEstimateClientFiles).toHaveBeenCalledWith([file], expect.any(Object));
     });
 
     // Check results in summary box
@@ -137,12 +136,11 @@ describe("Home Page", () => {
 
   it("handles export successfully", async () => {
     const mockBlob = new Blob(["test output"], { type: "application/zip" });
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      blob: async () => mockBlob,
-      headers: {
-        get: () => 'attachment; filename="result.zip"',
-      },
+    mockConvertClientFiles.mockResolvedValueOnce({
+      name: "result.zip",
+      blob: mockBlob,
+      size: mockBlob.size,
+      count: 1,
     });
 
     // Mock triggerDownload since it creates an anchor and clicks it
@@ -165,12 +163,7 @@ describe("Home Page", () => {
     fireEvent.click(exportBtn);
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith(
-        "/api/convert",
-        expect.objectContaining({
-          method: "POST",
-        }),
-      );
+      expect(mockConvertClientFiles).toHaveBeenCalledWith([file], expect.any(Object));
     });
 
     // Should show success state

@@ -12,9 +12,4 @@ export default defineConfig({
       "@": path.resolve(rootDir, "./"),
     },
   },
-  server: {
-    proxy: {
-      "/api": "http://localhost:8787",
-    },
-  },
 });

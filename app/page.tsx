@@ -1,8 +1,13 @@
 import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ClientImageOptions,
+  type OutputFormat,
+  convertClientFiles,
+  estimateClientFiles,
+} from "@/lib/browser-image-processing";
 import { formatBytes, formatPercent } from "@/lib/utils";
 
 type Preset = "tiny" | "small" | "balanced" | "crisp" | "custom";
-type OutputFormat = "auto" | "jpeg" | "png" | "webp" | "avif" | "tiff" | "gif";
 
 const presetQuality: Record<Exclude<Preset, "custom">, number> = {
   tiny: 45,
@@ -16,9 +21,6 @@ const formatLabels: Record<OutputFormat, string> = {
   jpeg: "JPG",
   png: "PNG",
   webp: "WebP",
-  avif: "AVIF",
-  tiff: "TIFF",
-  gif: "GIF",
 };
 
 type LocalFile = {
@@ -51,11 +53,8 @@ export default function Home() {
   const [width, setWidth] = useState("");
   const [height, setHeight] = useState("");
   const [fit, setFit] = useState<"inside" | "cover" | "contain">("inside");
-  const [keepMetadata, setKeepMetadata] = useState(false);
   const [flattenBackground, setFlattenBackground] = useState(true);
   const [background, setBackground] = useState("#ffffff");
-  const [lossless, setLossless] = useState(false);
-  const [progressive, setProgressive] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [estimating, setEstimating] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -129,22 +128,17 @@ export default function Home() {
     setStatus("idle");
   };
 
-  const buildFormData = () => {
-    const fd = new FormData();
-    for (const item of files) fd.append("files", item.file, item.file.name);
-    fd.set("format", format);
-    fd.set("preset", preset === "custom" ? "balanced" : preset);
-    fd.set("quality", String(quality));
-    if (targetSizeKB) fd.set("targetSizeKB", targetSizeKB);
-    if (width) fd.set("width", width);
-    if (height) fd.set("height", height);
-    fd.set("fit", fit);
-    fd.set("keepMetadata", String(keepMetadata));
-    fd.set("flatten", String(flattenBackground));
-    fd.set("background", background);
-    fd.set("lossless", String(lossless));
-    fd.set("progressive", String(progressive));
-    return fd;
+  const buildOptions = (): ClientImageOptions => {
+    return {
+      requestedFormat: format,
+      quality,
+      targetSizeKB: targetSizeKB ? Number(targetSizeKB) : 0,
+      resizeWidth: width ? Number(width) : 0,
+      resizeHeight: height ? Number(height) : 0,
+      fit,
+      flatten: flattenBackground,
+      background,
+    };
   };
 
   const triggerDownload = (url: string, name: string) => {
@@ -165,27 +159,17 @@ export default function Home() {
     setResult(null);
 
     try {
-      const response = await fetch("/api/convert", {
-        method: "POST",
-        body: buildFormData(),
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.error || "Conversion failed.");
-      }
-
-      const blob = await response.blob();
-      const contentDisposition = response.headers.get("content-disposition");
-      const fileNameMatch = contentDisposition?.match(/filename="(.+)"/);
-      const name = fileNameMatch?.[1] ?? "image-mage-export.zip";
-      const url = URL.createObjectURL(blob);
+      const exportResult = await convertClientFiles(
+        files.map((item) => item.file),
+        buildOptions(),
+      );
+      const url = URL.createObjectURL(exportResult.blob);
 
       const nextResult = {
-        name,
+        name: exportResult.name,
         url,
-        size: blob.size,
-        count: files.length,
+        size: exportResult.size,
+        count: exportResult.count,
       };
       if (result) URL.revokeObjectURL(result.url);
       setResult(nextResult);
@@ -209,16 +193,11 @@ export default function Home() {
     setError("");
 
     try {
-      const response = await fetch("/api/estimate", {
-        method: "POST",
-        body: buildFormData(),
-      });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.error || "Estimate failed.");
-      }
-      const payload = await response.json();
-      setEstimate(payload.files ?? []);
+      const outputs = await estimateClientFiles(
+        files.map((item) => item.file),
+        buildOptions(),
+      );
+      setEstimate(outputs);
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Estimate failed.");
@@ -227,17 +206,6 @@ export default function Home() {
       setEstimating(false);
     }
   };
-
-  useEffect(() => {
-    if (format !== "webp") {
-      setLossless(false);
-    }
-    if (format !== "jpeg") {
-      setProgressive(false);
-    } else {
-      setProgressive(true);
-    }
-  }, [format]);
 
   useEffect(() => {
     return () => {
@@ -627,61 +595,24 @@ export default function Home() {
                 </div>
 
                 <div className="grid gap-2 pt-1">
-                  {[
-                    {
-                      id: "opt-exif",
-                      label: "Keep EXIF Metadata",
-                      state: keepMetadata,
-                      setter: setKeepMetadata,
-                      tip: "Preserves copyright",
-                    },
-                    {
-                      id: "opt-progressive",
-                      label: "Progressive Scan",
-                      state: progressive,
-                      setter: setProgressive,
-                      tip: "Interlaced loading",
-                      disabled: format !== "jpeg",
-                    },
-                    {
-                      id: "opt-lossless",
-                      label: "Lossless Compression",
-                      state: lossless,
-                      setter: setLossless,
-                      tip: "Perfect detail",
-                      disabled: format !== "webp",
-                    },
-                    {
-                      id: "opt-flatten",
-                      label: "Flatten Transparency",
-                      state: flattenBackground,
-                      setter: setFlattenBackground,
-                      tip: "Removes alpha",
-                    },
-                  ].map((opt) => (
-                    <div
-                      key={opt.id}
-                      className={`group relative flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/5 px-3 py-2 transition ${opt.disabled ? "cursor-not-allowed opacity-30" : "cursor-pointer hover:bg-white/10"}`}
+                  <div className="group relative flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/5 px-3 py-2 transition hover:bg-white/10">
+                    <span className="absolute right-full mr-2 hidden min-w-max rounded-sm bg-black/80 px-2 py-1 text-[10px] text-white group-hover:block">
+                      Removes alpha
+                    </span>
+                    <label
+                      htmlFor="opt-flatten"
+                      className="cursor-pointer text-[10px] font-bold select-none"
                     >
-                      <span className="absolute right-full mr-2 hidden min-w-max rounded-sm bg-black/80 px-2 py-1 text-[10px] text-white group-hover:block">
-                        {opt.tip}
-                      </span>
-                      <label
-                        htmlFor={opt.id}
-                        className="cursor-pointer text-[10px] font-bold select-none"
-                      >
-                        {opt.label}
-                      </label>
-                      <input
-                        id={opt.id}
-                        type="checkbox"
-                        checked={opt.state}
-                        onChange={(e) => opt.setter(e.target.checked)}
-                        disabled={opt.disabled}
-                        className="size-3.5 cursor-pointer rounded-sm accent-(--sea)"
-                      />
-                    </div>
-                  ))}
+                      Flatten Transparency
+                    </label>
+                    <input
+                      id="opt-flatten"
+                      type="checkbox"
+                      checked={flattenBackground}
+                      onChange={(e) => setFlattenBackground(e.target.checked)}
+                      className="size-3.5 cursor-pointer rounded-sm accent-(--sea)"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/5 px-3 py-2">
